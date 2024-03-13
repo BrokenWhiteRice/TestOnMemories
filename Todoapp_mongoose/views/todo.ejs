@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<head>
+  <title>Todo App</title>
+  <%- include('common_head.ejs') %>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSONBlob Example</title>
+  <!-- Bootstrap -->
+  <link
+    rel="stylesheet"
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+  />
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+  />
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding-top: 50px;
+    }
+
+    .container {
+      max-width: 600px;
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-control {
+      margin-bottom: 10px;
+    }
+
+    .btn {
+      margin-right: 10px;
+    }
+
+    .item-card {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .item-card-header {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .profile-picture {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .user-info {
+      flex-grow: 1;
+    }
+
+    .item-card-body {
+      padding: 10px;
+    }
+
+    .item-image {
+      width: 100%;
+      height: auto;
+    }
+
+    .item-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+    }
+
+    .heart-icon {
+      margin-right: 10px;
+    }
+
+    .comment-input {
+      width: calc(100% - 60px);
+      margin-right: 10px;
+    }
+
+    .comments {
+      margin-top: 10px;
+    }
+
+    .comment {
+      margin-bottom: 5px;
+    }
+
+    /* Pink heart icon */
+
+    .heart-icon:hover {
+      cursor: pointer;
+    }
+
+    .heart-icon.clicked {
+      color: hotpink;
+    }
+
+    .pagination-container {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<a class="button-link" href="deleted">View Deleted Posts page</a>
+
+<body>
+  <div class="container mb-5">
+    <h1 class="text-center mb-4">Mini social media</h1>
+
+    <!-- Form -->
+    <form id="create-form" action="/" method="POST">
+      <div class="form-group">
+        <input
+          type="text"
+          class="form-control"
+          id="name"
+          name="name"
+          placeholder="Enter Name"
+        />
+      </div>
+      <div class="form-group">
+        <input
+          type="text"
+          class="form-control"
+          id="profile-image"
+          name="profimg"
+          placeholder="Profile Image URL"
+        />
+      </div>
+      <div class="form-group">
+        <input
+          type="text"
+          class="form-control"
+          id="main-image"
+          name="mainimg"
+          placeholder="Main Image URL (500x500)"
+        />
+      </div>
+
+      <div class="form-group">
+        <input
+          type="text"
+          class="form-control"
+          id="location"
+          name="location"
+          placeholder="Enter Location"
+        />
+      </div>
+      <div class="form-group">
+        <input
+          type="text"
+          class="form-control"
+          id="caption"
+          name="caption"
+          placeholder="Enter caption"
+        />
+      </div>
+      <button type="submit" class="btn btn-primary">Create</button>
+    </form>
+    <hr />
+    <!-- Pagination -->
+
+    <!-- Items List -->
+    <div id="items-list" class="mt-4"></div>
+  </div>
+  <% todoTasks.forEach(details => { %>
+  <div class="item-card container" id="${item.id}">
+    <div class="item-card-header">
+      <img
+        class="profile-picture"
+        src="<%= details.profimg %>"
+        alt="Profile
+      Picture"
+      />
+      <div class="user-info">
+        <strong><%= details.name %></strong>
+        <p><%= details.location %></p>
+      </div>
+    </div>
+    <div class="item-card-body">
+      <img class="item-image" src="<%= details.mainimg %>" alt="Item Image" />
+      <div class="comments" src=""></div>
+      <div class="caption"><%= details.caption %></div>
+    </div>
+    <div class="item-actions">
+      <i class="fas fa-heart heart-icon"></i>
+      <div class="ml-auto">
+        <button class="btn btn-danger btn-delete">
+          <a style="color: white" href="/remove/<%= details._id %>">Delete</a>
+        </button>
+      </div>
+    </div>
+  </div>
+  <% }) %>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script>
+    $(document).on("click", ".heart-icon", function () {
+      $(this).toggleClass("clicked");
+    });
+  </script>
+</body>

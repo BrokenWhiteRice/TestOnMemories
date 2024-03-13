@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deleted Tasks</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        padding: 20px;
+      }
+      h1 {
+        color: #333;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+      li {
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+        padding: 15px;
+      }
+      li:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      li h2 {
+        margin-top: 0;
+        margin-bottom: 5px;
+        color: #333;
+      }
+      li p {
+        margin: 0;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Deleted Tasks</h1>
+    <% if (deletedTasks.length === 0) { %>
+    <p>No deleted tasks found.</p>
+    <% } else { %>
+    <ul>
+      <% deletedTasks.forEach(task => { %>
+      <li>
+        <h2><%= task.title %></h2>
+        <p><%= task.date %></p>
+      </li>
+      <% }); %>
+    </ul>
+    <% } %>
+  </body>
+</html>
