@@ -1,272 +1,289 @@
 <!DOCTYPE html>
-<head>
-  <title>Todo App</title>
-  <%- include('common_head.ejs') %>
+<html lang="en">
+  <head>
+    <title>Todo App</title>
+    <%- include('common_head.ejs') %>
 
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JSONBlob Example</title>
-  <!-- Bootstrap -->
-  <link
-    rel="stylesheet"
-    href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-  />
-  <!-- Font Awesome -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-  />
-  <style>
-    body {
-      background-color: #f8f9fa;
-      padding-top: 50px;
-    }
-
-    .container {
-      max-width: 600px;
-      background-color: #fff;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .form-control {
-      margin-bottom: 10px;
-    }
-
-    .btn {
-      margin-right: 10px;
-    }
-
-    .item-card {
-      background-color: #fff;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      overflow: hidden;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .item-card-header {
-      display: flex;
-      align-items: center;
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-    }
-
-    .profile-picture {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      margin-right: 10px;
-    }
-
-    .user-info {
-      flex-grow: 1;
-    }
-
-    .item-card-body {
-      padding: 10px;
-    }
-
-    .item-image {
-      width: 100%;
-      height: auto;
-    }
-
-    .item-actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px;
-      border-top: 1px solid #ddd;
-    }
-
-    .heart-icon {
-      margin-right: 10px;
-    }
-
-    .comment-input {
-      width: calc(100% - 60px);
-      margin-right: 10px;
-    }
-
-    .comments {
-      margin-top: 10px;
-    }
-
-    .comment {
-      margin-bottom: 5px;
-    }
-
-    /* Pink heart icon */
-
-    .heart-icon:hover {
-      cursor: pointer;
-    }
-
-    .heart-icon.clicked {
-      color: hotpink;
-    }
-
-    .pagination-container {
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    .bg-beige {
-      background-color: #e2bfb3;
-    }
-
-    .font1 {
-      font-family: Calibri, Candara, Segoe, "Segoe UI", Optima, Arial,
-        sans-serif;
-      font-size: xx-large;
-      font-weight: 500;
-    }
-  </style>
-</head>
-
-<header class="header" data-header>
-  <nav class="navbar navbar-expand-lg navbar-light bg-beige mb-5">
-    <div class="container-fluid">
-      <a class="navbar-brand font1" href="#">Bami</a>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-toggle="collapse"
-        data-target="#navbarSupportedContent"
-        aria-controls="navbarSupportedContent"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav ml-auto w-100 justify-content-end">
-          <li class="nav-item active">
-            <a class="nav-link" href="#home">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#about">About</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#services">Services</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#contact">Contact</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-</header>
-
-<body>
-  <div class="container mb-5">
-    <h1 class="text-center mb-4">Mini social media</h1>
-
-    <!-- Form -->
-    <form id="create-form" action="/" method="POST">
-      <div class="form-group">
-        <input
-          type="text"
-          class="form-control"
-          id="name"
-          name="name"
-          placeholder="Enter Name"
-        />
-      </div>
-      <div class="form-group">
-        <input
-          type="text"
-          class="form-control"
-          id="profile-image"
-          name="profimg"
-          placeholder="Profile Image URL"
-        />
-      </div>
-      <div class="form-group">
-        <input
-          type="text"
-          class="form-control"
-          id="main-image"
-          name="mainimg"
-          placeholder="Main Image URL (500x500)"
-        />
-      </div>
-
-      <div class="form-group">
-        <input
-          type="text"
-          class="form-control"
-          id="location"
-          name="location"
-          placeholder="Enter Location"
-        />
-      </div>
-      <div class="form-group">
-        <input
-          type="text"
-          class="form-control"
-          id="caption"
-          name="caption"
-          placeholder="Enter caption"
-        />
-      </div>
-      <button type="submit" class="btn btn-primary">Create</button>
-    </form>
-    <hr />
-    <!-- Pagination -->
-
-    <!-- Items List -->
-    <div id="items-list" class="mt-4"></div>
-  </div>
-  <% todoTasks.forEach(details => { %>
-  <div class="item-card container" id="${item.id}">
-    <div class="item-card-header">
-      <img
-        class="profile-picture"
-        src="<%= details.profimg %>"
-        alt="Profile
-      Picture"
-      />
-      <div class="user-info">
-        <strong><%= details.name %></strong>
-        <p><%= details.location %></p>
-      </div>
-    </div>
-    <div class="item-card-body">
-      <img class="item-image" src="<%= details.mainimg %>" alt="Item Image" />
-      <div class="comments" src=""></div>
-      <div class="caption"><%= details.caption %></div>
-    </div>
-    <div class="item-actions">
-      <i class="fas fa-heart heart-icon"></i>
-      <div class="ml-auto">
-        <button class="btn btn-danger btn-delete">
-          <a style="color: white" href="/remove/<%= details._id %>">Delete</a>
-        </button>
-      </div>
-    </div>
-  </div>
-  <% }) %>
-
-  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
-  <script>
-    $(document).on("click", ".heart-icon", function () {
-      $(this).toggleClass("clicked");
-      localStorage.setItem("heartClicked", $(this).hasClass("clicked"));
-    });
-
-    $(document).ready(function () {
-      var heartClicked = localStorage.getItem("heartClicked");
-      if (heartClicked === "true") {
-        $(".heart-icon").addClass("clicked");
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JSONBlob Example</title>
+    <!-- Bootstrap -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        padding-top: 50px;
       }
-    });
-  </script>
-</body>
+
+      .container {
+        max-width: 600px;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .form-control {
+        margin-bottom: 10px;
+      }
+
+      .btn {
+        margin-right: 10px;
+      }
+
+      .item-card {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .item-card-header {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .profile-picture {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        margin-right: 10px;
+      }
+
+      .user-info {
+        flex-grow: 1;
+      }
+
+      .item-card-body {
+        padding: 10px;
+      }
+
+      .item-image {
+        width: 100%;
+        height: auto;
+      }
+
+      .item-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px;
+        border-top: 1px solid #ddd;
+      }
+
+      .heart-icon {
+        margin-right: 10px;
+      }
+
+      .comment-input {
+        width: calc(100% - 60px);
+        margin-right: 10px;
+      }
+
+      .comments {
+        margin-top: 10px;
+      }
+
+      .comment {
+        margin-bottom: 5px;
+      }
+
+      /* Pink heart icon */
+
+      .heart-icon:hover {
+        cursor: pointer;
+      }
+
+      .heart-icon.clicked {
+        color: hotpink;
+      }
+
+      .pagination-container {
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .bg-beige {
+        background-color: #e2bfb3;
+      }
+
+      .font1 {
+        font-family: Calibri, Candara, Segoe, "Segoe UI", Optima, Arial,
+          sans-serif;
+        font-size: xx-large;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="header" data-header>
+      <nav class="navbar navbar-expand-lg navbar-light bg-beige mb-5">
+        <div class="container-fluid">
+          <a class="navbar-brand font1" href="#">Bami</a>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ml-auto w-100 justify-content-end">
+              <li class="nav-item active">
+                <a class="nav-link" href="#home">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#about">About</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#services">Services</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#contact">Contact</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <div class="container mb-5">
+      <h1 class="text-center mb-4">Đây là không gian riêng 🫶</h1>
+
+      <!-- Form for creating new posts -->
+      <div class="create-form mb-4">
+        <form id="create-form" action="/" method="POST">
+          <div class="form-group">
+            <input
+              type="text"
+              class="form-control"
+              id="name"
+              name="name"
+              placeholder="Enter Name"
+            />
+          </div>
+          <div class="form-group">
+            <input
+              type="text"
+              class="form-control"
+              id="profile-image"
+              name="profimg"
+              placeholder="Profile Image URL"
+            />
+          </div>
+          <div class="form-group">
+            <input
+              type="text"
+              class="form-control"
+              id="main-image"
+              name="mainimg"
+              placeholder="Main Image URL (500x500)"
+            />
+          </div>
+
+          <div class="form-group">
+            <input
+              type="text"
+              class="form-control"
+              id="location"
+              name="location"
+              placeholder="Enter Location"
+            />
+          </div>
+          <div class="form-group">
+            <input
+              type="text"
+              class="form-control"
+              id="caption"
+              name="caption"
+              placeholder="Enter caption"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">Create</button>
+        </form>
+      </div>
+</div>
+      <!-- Pagination -->
+
+      <!-- List of existing posts -->
+      <div class="posts-list">
+        <% todoTasks.forEach(details => { %>
+        <div class="item-card container" id="<%= details._id %>">
+          <div class="item-card-header">
+            <img
+              class="profile-picture"
+              src="<%= details.profimg %>"
+              alt="Profile Picture"
+            />
+            <div class="user-info">
+              <strong><%= details.name %></strong>
+              <p><%= details.location %></p>
+            </div>
+          </div>
+          <div class="item-card-body">
+            <img
+              class="item-image"
+              src="<%= details.mainimg %>"
+              alt="Item Image"
+            />
+            <div class="comments" src=""></div>
+            <div class="caption"><%= details.caption %></div>
+          </div>
+          <div class="item-actions">
+            <i
+              class="fas fa-heart heart-icon"
+              data-post-id="<%= details._id %>"
+            ></i>
+            <div class="ml-auto">
+              <button class="btn btn-danger btn-delete">
+                <a style="color: white" href="/remove/<%= details._id %>"
+                  >Delete</a
+                >
+              </button>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+      $(document).on("click", ".heart-icon", function () {
+        $(this).toggleClass("clicked");
+        var postId = $(this).data("post-id"); // Get the post ID associated with the clicked heart icon
+        localStorage.setItem("heartClicked_" + postId, $(this).hasClass("clicked")); // Use post ID to set item in local storage
+      });
+
+      $(document).ready(function () {
+        var heartClicked;
+        <% todoTasks.forEach(details => { %>
+          heartClicked = localStorage.getItem("heartClicked_<%= details._id %>");
+          if (heartClicked === "true") {
+            $("#<%= details._id %> .heart-icon").addClass("clicked"); // Add class only to the heart icon of the specific post
+          }
+        <% }) %>
+      });
+    </script>
+  </body>
+</html>
