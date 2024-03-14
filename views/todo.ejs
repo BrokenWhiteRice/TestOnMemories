@@ -259,6 +259,14 @@
   <script>
     $(document).on("click", ".heart-icon", function () {
       $(this).toggleClass("clicked");
+      localStorage.setItem("heartClicked", $(this).hasClass("clicked"));
+    });
+
+    $(document).ready(function () {
+      var heartClicked = localStorage.getItem("heartClicked");
+      if (heartClicked === "true") {
+        $(".heart-icon").addClass("clicked");
+      }
     });
   </script>
 </body>
