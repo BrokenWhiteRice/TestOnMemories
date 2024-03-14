@@ -113,10 +113,55 @@
       margin-bottom: 20px;
       text-align: center;
     }
+
+    .bg-beige {
+      background-color: #e2bfb3;
+    }
+
+    .font1 {
+      font-family: Calibri, Candara, Segoe, "Segoe UI", Optima, Arial,
+        sans-serif;
+      font-size: xx-large;
+      font-weight: 500;
+    }
   </style>
 </head>
 
-<a class="button-link" href="deleted">View Deleted Posts page</a>
+<header class="header" data-header>
+  <nav class="navbar navbar-expand-lg navbar-light bg-beige mb-5">
+    <div class="container-fluid">
+      <a class="navbar-brand font1" href="#">Bami</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-auto w-100 justify-content-end">
+          <li class="nav-item active">
+            <a class="nav-link" href="#home">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#about">About</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#services">Services</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#contact">Contact</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>
 
 <body>
   <div class="container mb-5">
@@ -209,6 +254,8 @@
   <% }) %>
 
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
   <script>
     $(document).on("click", ".heart-icon", function () {
       $(this).toggleClass("clicked");
