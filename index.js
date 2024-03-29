@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
-
+const fs = require("fs");
+const path = require("path");
 const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
+const csv = require("csv-parser");
 dotenv.config();
 
 const TodoTask = require("./models/TodoTask");
@@ -12,7 +14,7 @@ main().catch((err) => console.log(err));
 async function main() {
   await mongoose.connect(process.env.URI);
   console.log("Connected to db!");
-  app.listen(3122, () => console.log("Server Up and running"));
+  app.listen(3100, () => console.log("Server Up and running"));
 }
 
 app.set("view engine", "ejs");
@@ -31,7 +33,7 @@ app.get("/api/posts", async (req, res) => {
 // CRUD processing
 
 app
-  .route("/")
+  .route("/home")
   .get(async (req, res) => {
     try {
       const tasks = await TodoTask.find({ deleted: false });
@@ -55,6 +57,34 @@ app
       res.send(500, err);
     }
   });
+
+app.route("/").get(async (req, res) => {
+  try {
+    res.render("login.ejs");
+  } catch (err) {
+    console.error(err);
+  }
+});
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+  let authenticated = false;
+
+  fs.createReadStream("./util/credentials.csv")
+    .pipe(csv())
+    .on("data", (row) => {
+      console.log(row);
+      if (row.email === email && row.password === password) {
+        authenticated = true;
+      }
+    })
+    .on("end", () => {
+      if (authenticated) {
+        res.redirect("/home");
+      } else {
+        res.send("Không đúng ròi, thử lại điiii");
+      }
+    });
+});
 
 /* app.get("/", async (req, res) => {
   try {

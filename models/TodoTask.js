@@ -25,6 +25,10 @@ const todoTaskSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  avatar: {
+    data: Buffer,
+    contentType: String,
+  },
 });
 
 module.exports = mongoose.model("TodoTask", todoTaskSchema);
