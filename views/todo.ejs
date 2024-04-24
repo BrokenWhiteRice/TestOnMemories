@@ -220,7 +220,7 @@
 
       <!-- Form for creating new posts -->
       <div class="create-form mb-4">
-        <form id="create-form" action="/home" method="POST">
+        <form id="create-form" action="/home" method="POST" enctype="multipart/form-data">
           <div class="form-group">
             <input
               type="text"
@@ -230,26 +230,18 @@
               placeholder="Enter Name"
             />
           </div>
-          <div class="form-group">
-            <label for="profile-image">Profile Image</label>
-            <input
-              type="file"
-              class="form-control-file"
-              id="profile-image"
-              name="profimg"
-              accept="image/*"
-            />
-          </div>
+          
           <div class="form-group">
             <label for="main-image">Main Image</label>
             <input
               type="file"
               class="form-control-file"
               id="main-image"
-              name="mainimg"
+              name="file" 
               accept="image/*"
             />
           </div>
+          
           
 
           <div class="form-group">
@@ -277,47 +269,45 @@
       <!-- Pagination -->
 
       <!-- List of existing posts -->
-      <div class="posts-list">
-        <% todoTasks.forEach(details => { %>
-        <div class="item-card container" id="<%= details._id %>">
-          <div class="item-card-header">
-            <img
-              class="profile-picture"
-              src="<%= details.profileImage %>"
-              alt="Profile Picture"
-            />
-            <div class="user-info">
-              <strong><%= details.name %></strong>
-              <p><%= details.location %></p>
-            </div>
-          </div>
-          <div class="item-card-body">
-            <img
-              class="item-image"
-              src="<%= details.mainimg %>"
-              alt="Item Image"
-            />
-            <div class="comments" src=""></div>
-            <div class="caption"><%= details.caption %></div>
-          </div>
-          <div class="item-actions">
-            <i
-              class="fas fa-heart heart-icon"
-              data-post-id="<%= details._id %>"
-            ></i>
-            <div class="ml-auto"><button class="btn btn-primary btn-edit">
-              <a style="color: white" href="/edit/<%= details._id %>">Edit</a>
-            </button>
-              <button class="btn btn-danger btn-delete">
-                <a style="color: white" href="/remove/<%= details._id %>"
-                  >Delete</a
-                >
-              </button>
-            </div>
-          </div>
+      <!-- List of existing posts -->
+<div class="posts-list">
+  <% todoTasks.forEach(details => { %>
+    <div class="item-card container" id="<%= details._id %>">
+      <div class="item-card-header">
+        <img
+          class="profile-picture"
+          src="<%= avatarUrl %>"
+          alt="Profile Picture"
+        />
+        <div class="user-info">
+          <strong><%= details.name %></strong>
+          <p><%= details.location %></p>
         </div>
-        <% }) %>
       </div>
+      <div class="item-card-body">
+        <img src="/image/<%= details._id %>" alt="Uploaded Image">
+
+        <div class="comments" src=""></div>
+        <div class="caption"><%= details.caption %></div>
+      </div>
+      <div class="item-actions">
+        <i
+          class="fas fa-heart heart-icon"
+          data-post-id="<%= details._id %>"
+        ></i>
+        <div class="ml-auto">
+          <button class="btn btn-primary btn-edit">
+            <a style="color: white" href="/edit/<%= details._id %>">Edit</a>
+          </button>
+          <button class="btn btn-danger btn-delete">
+            <a style="color: white" href="/remove/<%= details._id %>">Delete</a>
+          </button>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>

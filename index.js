@@ -8,8 +8,10 @@ const csv = require("csv-parser");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 dotenv.config();
-
+const multer = require("multer");
 const TodoTask = require("./models/TodoTask");
+
+const upload = multer({ dest: "uploads/" });
 
 main().catch((err) => console.log(err));
 
@@ -21,8 +23,23 @@ async function main() {
 
 app.set("view engine", "ejs");
 app.use("/static", express.static("public"));
+app.use("/uploads", express.static("uploads"));
+
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Error handling middleware for Multer
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    // A Multer error occurred when uploading
+    console.error("Multer error:", err);
+    res.status(400).send("Error uploading file");
+  } else {
+    // An unknown error occurred
+    console.error("Unknown error:", err);
+    res.status(500).send("Internal Server Error");
+  }
+});
 
 app.get("/api/posts", async (req, res) => {
   try {
@@ -41,7 +58,6 @@ app.route("/").get(async (req, res) => {
   }
 });
 
-// GET route for /home
 app.get("/home", verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -61,38 +77,45 @@ app.get("/home", verifyToken, async (req, res) => {
   }
 });
 
-// POST route for creating a new task on /home
-app.post("/home", verifyToken, async (req, res) => {
-  const userId = req.user.id;
-  const todoTask = new TodoTask({
-    name: req.body.name,
-    profimg: req.body.profimg,
-    mainimg: req.body.mainimg,
-    location: req.body.location,
-    caption: req.body.caption,
-    userIdentifier: userId,
-  });
+app.post("/home", verifyToken, upload.single("file"), async (req, res) => {
   try {
+    const userId = req.user.id;
+
+    // Check if a file was uploaded
+    if (!req.file) {
+      return res.status(400).send("No file uploaded");
+    }
+
+    // Create a new TodoTask object
+    const todoTask = new TodoTask({
+      name: req.body.name,
+      mainimg: req.file.buffer,
+      location: req.body.location,
+      caption: req.body.caption,
+      userIdentifier: userId,
+    });
+
+    // Save the TodoTask object to the database
     await todoTask.save();
 
-    // Retrieve tasks after saving
+    // Retrieve avatarUrl from req.user
+    const avatarUrl = req.user.avatarUrl;
+
+    // Retrieve todoTasks for the user
     const tasks = await TodoTask.find({
       userIdentifier: userId,
       deleted: false,
     });
 
-    // Retrieve avatarUrl from req.user
-    const avatarUrl = req.user.avatarUrl;
-
-    // Pass the required variables to the template
+    // If the task is saved successfully, render the todo.ejs template with the necessary variables
     res.render("todo.ejs", {
-      avatarUrl: avatarUrl,
-      token: req.token,
       todoTasks: tasks,
+      token: req.token,
+      avatarUrl: avatarUrl,
     });
-  } catch (err) {
-    console.error("Error creating task:", err);
-    res.status(500).send(err);
+  } catch (error) {
+    console.error("Error creating task:", error);
+    res.status(500).send("Error creating task");
   }
 });
 
@@ -287,3 +310,19 @@ app.get("/post/:postId", (req, res) => {
   res.render("post.ejs", { post: postData });
 });
 // ========= file upload ========
+// Update the route handler for serving images
+app.get("/image/:taskId", async (req, res) => {
+  try {
+    const taskId = req.params.taskId;
+    const task = await TodoTask.findById(taskId);
+    console.log("Retrieved task:", task); // Log the retrieved task to console
+    if (!task || !task.mainimg) {
+      return res.status(404).send("Image not found");
+    }
+    res.set("Content-Type", "image/png"); // Adjust the content type based on the image format
+    res.send(task.mainimg);
+  } catch (error) {
+    console.error("Error fetching image:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});

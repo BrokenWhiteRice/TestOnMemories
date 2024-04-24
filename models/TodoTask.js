@@ -12,7 +12,7 @@ const todoTaskSchema = new mongoose.Schema({
     type: String,
   },
   mainimg: {
-    type: String,
+    type: Buffer,
   },
   location: {
     type: String,
