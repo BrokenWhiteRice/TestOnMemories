@@ -133,18 +133,19 @@ app.post("/login", (req, res) => {
   let authenticated = false;
   let avatarUrl = ""; // Initialize avatarUrl variable
 
-  // Read the CSV file
+  // Read the CSV file to authenticate users
   fs.createReadStream("./util/credentials.csv")
     .pipe(csv())
     .on("data", (row) => {
       if (row.email === email && row.password === password) {
         authenticated = true;
 
+        // Set avatarUrl if it exists in the CSV data
         if (row.avatar) {
           avatarUrl = row.avatar;
         }
 
-        // Generate JWT token
+        // Generate JWT token for authentication
         const token = jwt.sign(
           {
             id: row.id,
@@ -162,7 +163,7 @@ app.post("/login", (req, res) => {
           secure: true,
         });
 
-        // Retrieve todoTasks for the user
+        // Retrieve todoTasks for the user from the database
         TodoTask.find({ userIdentifier: row.id, deleted: false })
           .then((tasks) => {
             // Render the todo.ejs template with the necessary variables
@@ -175,6 +176,7 @@ app.post("/login", (req, res) => {
       }
     })
     .on("end", () => {
+      // Handle authentication failure
       if (!authenticated) {
         res.status(401).send("Invalid credentials");
       }
