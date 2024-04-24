@@ -7,9 +7,12 @@ const dotenv = require("dotenv");
 const csv = require("csv-parser");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcrypt"); // Import bcrypt for password hashing
 dotenv.config();
 const multer = require("multer");
+
 const TodoTask = require("./models/TodoTask");
+const User = require("./models/User");
 
 const upload = multer({ dest: "uploads/" });
 
@@ -66,11 +69,12 @@ app.get("/home", verifyToken, async (req, res) => {
       deleted: false,
     });
     const avatarUrl = req.avatarUrl;
+    const name = req.name;
     res.render("todo.ejs", {
       todoTasks: tasks,
       token: req.token,
       avatarUrl: avatarUrl,
-      filename: req.file.filename,
+      name: name,
     });
   } catch (err) {
     console.error(err);
@@ -108,6 +112,7 @@ app.post("/home", verifyToken, upload.single("file"), async (req, res) => {
 
     // Retrieve avatarUrl from req.user
     const avatarUrl = req.user.avatarUrl;
+    const name = req.user.name;
 
     // Retrieve todoTasks for the user
     const tasks = await TodoTask.find({
@@ -119,6 +124,7 @@ app.post("/home", verifyToken, upload.single("file"), async (req, res) => {
       todoTasks: tasks,
       token: req.token,
       avatarUrl: avatarUrl,
+      name: name,
       filename: filename, // Pass the filename to the view
     });
   } catch (error) {
@@ -128,59 +134,44 @@ app.post("/home", verifyToken, upload.single("file"), async (req, res) => {
 });
 
 // === CALL to AUTHENTICATE ===
-app.post("/login", (req, res) => {
+app.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  let authenticated = false;
-  let avatarUrl = ""; // Initialize avatarUrl variable
 
-  // Read the CSV file to authenticate users
-  fs.createReadStream("./util/credentials.csv")
-    .pipe(csv())
-    .on("data", (row) => {
-      if (row.email === email && row.password === password) {
-        authenticated = true;
+  try {
+    // Find the user by email
+    const user = await User.findOne({ email });
 
-        // Set avatarUrl if it exists in the CSV data
-        if (row.avatar) {
-          avatarUrl = row.avatar;
-        }
+    if (!user) {
+      return res.status(401).send("Invalid credentials");
+    }
 
-        // Generate JWT token for authentication
-        const token = jwt.sign(
-          {
-            id: row.id,
-            email: row.email,
-            avatarUrl: row.avatar,
-            name: row.name,
-          },
-          process.env.JWT_SECRET,
-          { expiresIn: "1h" }
-        );
+    // Compare the password with the hashed password stored in the database
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).send("Invalid credentials");
+    }
 
-        // Set JWT token as cookie
-        res.cookie("token", "Bearer " + token, {
-          httpOnly: true,
-          secure: true,
-        });
+    // Generate JWT token for authentication
+    const token = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+        avatarUrl: user.avatar,
+        name: user.name,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-        // Retrieve todoTasks for the user from the database
-        TodoTask.find({ userIdentifier: row.id, deleted: false })
-          .then((tasks) => {
-            // Render the todo.ejs template with the necessary variables
-            res.render("todo.ejs", { avatarUrl, token, todoTasks: tasks });
-          })
-          .catch((err) => {
-            console.error(err);
-            res.status(500).send("Internal Server Error");
-          });
-      }
-    })
-    .on("end", () => {
-      // Handle authentication failure
-      if (!authenticated) {
-        res.status(401).send("Invalid credentials");
-      }
-    });
+    // Set JWT token as cookie
+    res.cookie("token", "Bearer " + token, { httpOnly: true, secure: true });
+
+    // Redirect the user to the home page
+    res.redirect("/home");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 // === LOG OUT ====
@@ -188,6 +179,45 @@ app.get("/logout", (req, res) => {
   res.clearCookie("token", { httpOnly: true, secure: true });
   // Redirect the user to the login page after logout
   res.redirect("/");
+});
+
+// === SIGNUP ====
+app.post("/signup", async (req, res) => {
+  try {
+    // Extract email and password from request body
+    const { email, password } = req.body;
+
+    // Validate input data (you can add more validation as needed)
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    // Check if user with the same email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new user object
+    const newUser = new User({ email, password: hashedPassword });
+
+    // Save the new user to the database
+    await newUser.save();
+
+    // Generate JWT token for authentication
+    const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    // Send the JWT token back to the client
+    res.status(201).json({ token });
+  } catch (error) {
+    console.error("Error signing up user:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // === HOME PAGE ===
@@ -238,6 +268,7 @@ app.get("/remove/:id", verifyToken, async (req, res) => {
 
     // Retrieve avatarUrl from req.user
     const avatarUrl = req.user.avatarUrl;
+    const name = req.user.name;
 
     // Extract the filename if task exists and has mainimg property
     const filename = task && task.mainimg ? task.mainimg.filename : "";
@@ -246,6 +277,7 @@ app.get("/remove/:id", verifyToken, async (req, res) => {
     res.render("todo.ejs", {
       filename: filename,
       avatarUrl: avatarUrl,
+      name: name,
       token: req.token,
       todoTasks: tasks,
     });
@@ -264,6 +296,7 @@ app.get("/deleted", async (req, res) => {
     res.status(500).send(err);
   }
 });
+
 // -------------- verifyToken -----------------------
 function verifyToken(req, res, next) {
   let bearerHeader = req.headers["authorization"];
@@ -289,63 +322,3 @@ function verifyToken(req, res, next) {
 }
 
 // ==== added ===
-
-// Define a schema for comments
-const Comment = mongoose.model("Comment", {
-  postId: String,
-  userId: String,
-  content: String,
-});
-
-// Endpoint for posting comments
-app.post("/post/:postId/comment", verifyToken, async (req, res) => {
-  try {
-    const { postId } = req.params;
-    const { content } = req.body;
-    const userId = req.user.id; // Assuming the user ID is stored in the JWT token
-
-    // Create a new comment
-    const comment = new Comment({
-      postId,
-      userId,
-      content,
-    });
-
-    // Save the comment to the database
-    await comment.save();
-
-    res.status(201).send("Comment posted successfully");
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error posting comment");
-  }
-});
-
-app.get("/post/:postId", (req, res) => {
-  // Fetch post data from the database or any other data source
-  const postId = req.params.postId;
-  const postData = {
-    title: "Sample Post Title",
-    content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    author: "John Doe",
-  };
-
-  res.render("post.ejs", { post: postData });
-});
-// ========= file upload ========
-// Update the route handler for serving images
-app.get("/image/:taskId", async (req, res) => {
-  try {
-    const taskId = req.params.taskId;
-    const task = await TodoTask.findById(taskId);
-    console.log("Retrieved task:", task); // Log the retrieved task to console
-    if (!task || !task.mainimg) {
-      return res.status(404).send("Image not found");
-    }
-    res.set("Content-Type", "image/png"); // Adjust the content type based on the image format
-    res.send(task.mainimg);
-  } catch (error) {
-    console.error("Error fetching image:", error);
-    res.status(500).send("Internal Server Error");
-  }
-});

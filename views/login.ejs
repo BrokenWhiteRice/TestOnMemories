@@ -72,17 +72,32 @@
       <h2 style="text-align: center">
         Nhập email với mật khẩu đi nhìn cái gì mà nhìn 🥸
       </h2>
-      <form action="/login" method="POST">
+      <!-- Signin Form -->
+      <form id="signin-form" action="/login" method="POST">
         <label for="email">Email</label>
         <input type="email" id="email" name="email" required />
         <label for="password">Password</label>
         <input type="password" id="password" name="password" required />
-        <button id="login" type="submit">
+        <button type="submit" id="login">
           Click vào đây để thấy điều kỳ diệu 🤩
         </button>
       </form>
+
+      <!-- Signup Form -->
+      <!-- Signup Form -->
+      <form
+        id="signup-form"
+        action="/signup"
+        method="POST"
+        style="margin-top: 20px"
+      >
+        <h2>Signup</h2>
+        <label for="signup-email">Email</label>
+        <input type="email" id="signup-email" name="email" required />
+        <label for="signup-password">Password</label>
+        <input type="password" id="signup-password" name="password" required />
+        <button type="submit" id="signup">Sign Up</button>
+      </form>
     </div>
   </body>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script></script>
 </html>
