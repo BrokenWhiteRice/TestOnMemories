@@ -70,6 +70,7 @@ app.get("/home", verifyToken, async (req, res) => {
       todoTasks: tasks,
       token: req.token,
       avatarUrl: avatarUrl,
+      filename: req.file.filename,
     });
   } catch (err) {
     console.error(err);
@@ -86,10 +87,17 @@ app.post("/home", verifyToken, upload.single("file"), async (req, res) => {
       return res.status(400).send("No file uploaded");
     }
 
-    // Create a new TodoTask object
+    // Access the filename and other image properties
+    const { filename, buffer, mimetype } = req.file;
+
+    // Create a new TodoTask object with image data
     const todoTask = new TodoTask({
       name: req.body.name,
-      mainimg: req.file.buffer,
+      mainimg: {
+        data: buffer, // Save image data
+        contentType: mimetype, // Save content type
+        filename: filename, // Save filename
+      },
       location: req.body.location,
       caption: req.body.caption,
       userIdentifier: userId,
@@ -107,11 +115,11 @@ app.post("/home", verifyToken, upload.single("file"), async (req, res) => {
       deleted: false,
     });
 
-    // If the task is saved successfully, render the todo.ejs template with the necessary variables
     res.render("todo.ejs", {
       todoTasks: tasks,
       token: req.token,
       avatarUrl: avatarUrl,
+      filename: filename, // Pass the filename to the view
     });
   } catch (error) {
     console.error("Error creating task:", error);
@@ -138,7 +146,12 @@ app.post("/login", (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign(
-          { id: row.id, email: row.email, avatarUrl: row.avatar },
+          {
+            id: row.id,
+            email: row.email,
+            avatarUrl: row.avatar,
+            name: row.name,
+          },
           process.env.JWT_SECRET,
           { expiresIn: "1h" }
         );
@@ -208,6 +221,10 @@ app
 app.get("/remove/:id", verifyToken, async (req, res) => {
   const id = req.params.id;
   try {
+    // Fetch the task by ID
+    const task = await TodoTask.findById(id);
+
+    // Update the task to mark it as deleted
     await TodoTask.findByIdAndUpdate(id, { deleted: true });
 
     // Retrieve tasks after removing
@@ -220,8 +237,12 @@ app.get("/remove/:id", verifyToken, async (req, res) => {
     // Retrieve avatarUrl from req.user
     const avatarUrl = req.user.avatarUrl;
 
+    // Extract the filename if task exists and has mainimg property
+    const filename = task && task.mainimg ? task.mainimg.filename : "";
+
     // Pass the required variables to the template
     res.render("todo.ejs", {
+      filename: filename,
       avatarUrl: avatarUrl,
       token: req.token,
       todoTasks: tasks,
