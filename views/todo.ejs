@@ -198,7 +198,7 @@
               </li>
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  <img src="<%= avatarUrl %>" alt="User Avatar" class="profile-picture rounded-circle" />
+                  <img src="<%= avatarUrl %>" alt="User Avatar" class="profile-picture" />
                 </a>
                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
                   <a class="dropdown-item" href="#">Profile</a>
@@ -217,30 +217,62 @@
 
     <div class="container mb-5">
       <h1 class="text-center mb-4">Đây là không gian riêng 🫶</h1>
-      <form id="create-form" action="/create-post" method="POST" enctype="multipart/form-data">
-        <div class="form-group">
-          <input type="text" class="form-control" id="name" name="name" placeholder="Enter Name" />
-        </div>
-        <div class="form-group">
-          <label for="profile-image-upload" class="btn btn-primary">Upload Profile Image</label>
-          <input type="file" class="form-control-file" id="profile-image-upload" name="profile-image" style="display: none;" accept="image/*" />
-        </div>
-        <div class="form-group">
-          <label for="main-image-upload" class="btn btn-primary">Upload Main Image (500x500)</label>
-          <input type="file" class="form-control-file" id="main-image-upload" name="main-image" style="display: none;" accept="image/*" />
-        </div>
-        <div class="form-group">
-          <input type="text" class="form-control" id="location" name="location" placeholder="Enter Location" />
-        </div>
-        <div class="form-group">
-          <input type="text" class="form-control" id="caption" name="caption" placeholder="Enter caption" />
-        </div>
 
-        <input type="hidden" id="token" name="token" value="<%= token %>" />
-        <button type="submit" class="btn btn-primary">Create</button>
-      </form>
-      
-    
+      <!-- Form for creating new posts -->
+      <div class="create-form mb-4">
+        <form id="create-form" action="/home" method="POST">
+          <div class="form-group">
+            <input
+              type="text"
+              class="form-control"
+              id="name"
+              name="name"
+              placeholder="Enter Name"
+            />
+          </div>
+          <div class="form-group">
+            <label for="profile-image">Profile Image</label>
+            <input
+              type="file"
+              class="form-control-file"
+              id="profile-image"
+              name="profimg"
+              accept="image/*"
+            />
+          </div>
+          <div class="form-group">
+            <label for="main-image">Main Image</label>
+            <input
+              type="file"
+              class="form-control-file"
+              id="main-image"
+              name="mainimg"
+              accept="image/*"
+            />
+          </div>
+          
+
+          <div class="form-group">
+            <input
+              type="text"
+              class="form-control"
+              id="location"
+              name="location"
+              placeholder="Enter Location"
+            />
+          </div>
+          <div class="form-group">
+            <input
+              type="text"
+              class="form-control"
+              id="caption"
+              name="caption"
+              placeholder="Enter caption"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">Create</button>
+        </form>
+      </div>
 </div>
       <!-- Pagination -->
 
@@ -309,6 +341,7 @@
         <% }) %>
       });
 
+      
       
     </script>
   </body>

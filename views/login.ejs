@@ -84,19 +84,5 @@
     </div>
   </body>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script>
-    document.getElementById("login").addEventListener("click", function () {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-
-      axios
-        .post("http://localhost:3000/login", { email, password })
-        .then((response) => {
-          console.log("Logged in successfully:", response.data.jwt);
-          localStorage.setItem("token", response.data.jwt);
-          alert("you are logged in!");
-        })
-        .catch((error) => console.error("Error logging in:", error));
-    });
-  </script>
+  <script></script>
 </html>

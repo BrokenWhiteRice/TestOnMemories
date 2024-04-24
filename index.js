@@ -33,8 +33,6 @@ app.get("/api/posts", async (req, res) => {
     res.status(500).send({ error: "Failed to retrieve posts" });
   }
 });
-
-// === LOGIN PAGE ===
 app.route("/").get(async (req, res) => {
   try {
     res.render("login.ejs");
@@ -43,12 +41,58 @@ app.route("/").get(async (req, res) => {
   }
 });
 
-app.post("/create-post", async (req, res) => {
+// GET route for /home
+app.get("/home", verifyToken, async (req, res) => {
   try {
-    res.redirect("/home");
+    const userId = req.user.id;
+    const tasks = await TodoTask.find({
+      userIdentifier: userId,
+      deleted: false,
+    });
+    const avatarUrl = req.avatarUrl;
+    res.render("todo.ejs", {
+      todoTasks: tasks,
+      token: req.token,
+      avatarUrl: avatarUrl,
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Server Error");
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+// POST route for creating a new task on /home
+app.post("/home", verifyToken, async (req, res) => {
+  const userId = req.user.id;
+  const todoTask = new TodoTask({
+    name: req.body.name,
+    profimg: req.body.profimg,
+    mainimg: req.body.mainimg,
+    location: req.body.location,
+    caption: req.body.caption,
+    userIdentifier: userId,
+  });
+  try {
+    await todoTask.save();
+
+    // Retrieve tasks after saving
+    const tasks = await TodoTask.find({
+      userIdentifier: userId,
+      deleted: false,
+    });
+
+    // Retrieve avatarUrl from req.user
+    const avatarUrl = req.user.avatarUrl;
+
+    // Pass the required variables to the template
+    res.render("todo.ejs", {
+      avatarUrl: avatarUrl,
+      token: req.token,
+      todoTasks: tasks,
+    });
+  } catch (err) {
+    console.error("Error creating task:", err);
+    res.status(500).send(err);
   }
 });
 
@@ -57,7 +101,6 @@ app.post("/login", (req, res) => {
   const { email, password } = req.body;
   let authenticated = false;
   let avatarUrl = ""; // Initialize avatarUrl variable
-  let todoTasks = []; // Initialize todoTasks variable
 
   // Read the CSV file
   fs.createReadStream("./util/credentials.csv")
@@ -66,24 +109,28 @@ app.post("/login", (req, res) => {
       if (row.email === email && row.password === password) {
         authenticated = true;
 
-        // Check if avatar URL exists in the row
         if (row.avatar) {
           avatarUrl = row.avatar;
         }
 
         // Generate JWT token
         const token = jwt.sign(
-          { id: row.id, email: row.email },
+          { id: row.id, email: row.email, avatarUrl: row.avatar },
           process.env.JWT_SECRET,
           { expiresIn: "1h" }
         );
 
+        // Set JWT token as cookie
+        res.cookie("token", "Bearer " + token, {
+          httpOnly: true,
+          secure: true,
+        });
+
         // Retrieve todoTasks for the user
         TodoTask.find({ userIdentifier: row.id, deleted: false })
           .then((tasks) => {
-            todoTasks = tasks;
-            // Pass avatar URL, token, and todoTasks to the EJS template
-            res.render("todo.ejs", { avatarUrl, token, todoTasks });
+            // Render the todo.ejs template with the necessary variables
+            res.render("todo.ejs", { avatarUrl, token, todoTasks: tasks });
           })
           .catch((err) => {
             console.error(err);
@@ -93,7 +140,7 @@ app.post("/login", (req, res) => {
     })
     .on("end", () => {
       if (!authenticated) {
-        res.status(401).send("Khong dung rui thu lai ikk");
+        res.status(401).send("Invalid credentials");
       }
     });
 });
@@ -106,16 +153,6 @@ app.get("/logout", (req, res) => {
 });
 
 // === HOME PAGE ===
-app.get("/home", verifyToken, async (req, res) => {
-  try {
-    const userIdentifier = req.user.id;
-    const tasks = await TodoTask.find({ userIdentifier, deleted: false });
-    res.render("todo.ejs", { todoTasks: tasks });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Internal Server Error");
-  }
-});
 
 //UPDATE
 app
@@ -145,13 +182,27 @@ app
     }
   });
 
-//DELETE
-app.route("/remove/:id").get(async (req, res) => {
+app.get("/remove/:id", verifyToken, async (req, res) => {
   const id = req.params.id;
   try {
     await TodoTask.findByIdAndUpdate(id, { deleted: true });
 
-    res.redirect("/home");
+    // Retrieve tasks after removing
+    const userId = req.user.id;
+    const tasks = await TodoTask.find({
+      userIdentifier: userId,
+      deleted: false,
+    });
+
+    // Retrieve avatarUrl from req.user
+    const avatarUrl = req.user.avatarUrl;
+
+    // Pass the required variables to the template
+    res.render("todo.ejs", {
+      avatarUrl: avatarUrl,
+      token: req.token,
+      todoTasks: tasks,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Error removing task");
@@ -167,7 +218,7 @@ app.get("/deleted", async (req, res) => {
     res.status(500).send(err);
   }
 });
-
+// -------------- verifyToken -----------------------
 function verifyToken(req, res, next) {
   let bearerHeader = req.headers["authorization"];
   if (!bearerHeader) {
@@ -177,16 +228,62 @@ function verifyToken(req, res, next) {
     const bearerToken = bearerHeader.split(" ")[1];
     jwt.verify(bearerToken, process.env.JWT_SECRET, (err, authData) => {
       if (err) {
-        console.error("JWT verification error:", err);
-        res.status(403).send("Forbidden: Invalid token");
+        console.error("Token verification error:", err);
+        res.status(403).send("Invalid or expired token");
       } else {
-        console.log("Authenticated user data:", authData);
+        console.log("Token verified successfully:", authData);
         req.user = authData;
         next();
       }
     });
   } else {
-    console.error("Token not provided");
-    res.status(403).send("Forbidden: Token not provided");
+    console.log("No token provided");
+    res.status(403).send("No token provided");
   }
 }
+
+// ==== added ===
+
+// Define a schema for comments
+const Comment = mongoose.model("Comment", {
+  postId: String,
+  userId: String,
+  content: String,
+});
+
+// Endpoint for posting comments
+app.post("/post/:postId/comment", verifyToken, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { content } = req.body;
+    const userId = req.user.id; // Assuming the user ID is stored in the JWT token
+
+    // Create a new comment
+    const comment = new Comment({
+      postId,
+      userId,
+      content,
+    });
+
+    // Save the comment to the database
+    await comment.save();
+
+    res.status(201).send("Comment posted successfully");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error posting comment");
+  }
+});
+
+app.get("/post/:postId", (req, res) => {
+  // Fetch post data from the database or any other data source
+  const postId = req.params.postId;
+  const postData = {
+    title: "Sample Post Title",
+    content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    author: "John Doe",
+  };
+
+  res.render("post.ejs", { post: postData });
+});
+// ========= file upload ========
