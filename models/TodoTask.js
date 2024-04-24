@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const todoTaskSchema = new mongoose.Schema({
+  userIdentifier: {
+    type: String,
+    required: true,
+  },
   name: {
     type: String,
     required: true,

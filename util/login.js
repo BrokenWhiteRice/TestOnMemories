@@ -42,5 +42,6 @@ function handleSubmit(event) {
 
   event.target.reset();
 }
+
 // Event listener to the form for form submission
 document.getElementById("signin-form").addEventListener("submit", handleSubmit);

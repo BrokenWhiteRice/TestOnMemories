@@ -1,38 +1,123 @@
 <!DOCTYPE html>
-<head>
-  <title>Todo App</title>
-  <%- include('common_head.ejs') %>
-</head>
-
-<body>
-  <div class="todo-container">
-    <h2>To-Do List</h2>
-    <div class="todo">
-      <form action="" method="POST" class="todo-header">
-        <input type="text" name="title" />
-        <button type="submit"><span class="fas fa-plus"></span></button>
-      </form>
-      <ul class="todo-list">
-        <% todoTasks.forEach(details => { %> <% if (details._id == idTask) { %>
-        <li class="todo-list-item">
-          <form action="/edit/<%= details._id %>" method="POST">
-            <input type="text" value="<%= details.title %>" name="title" />
-            <button type="submit">Confirm</button>
-            <a href="/" class="cancel">Cancel</a>
-          </form>
-        </li>
-        <% } else { %>
-        <li class="todo-list-item">
-          <div class="todo-list-item-name"><%= details.title %></div>
-          <a href="/edit/<%= details._id %>" class="edit">
-            <span class="fas fa-edit"></span>
-          </a>
-          <a href="/remove/<%= details._id %>" class="remove">
-            <span class="fas fa-times"></span>
-          </a>
-        </li>
-        <% } %> <% }) %>
-      </ul>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Todo</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 0;
+      }
+      .todo-container {
+        max-width: 600px;
+        margin: 50px auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .todo-header {
+        margin-bottom: 20px;
+      }
+      .todo-header input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      .todo-header button[type="submit"] {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .todo-header button[type="submit"]:hover {
+        background-color: #0056b3;
+      }
+      .cancel {
+        color: #007bff;
+        text-decoration: none;
+        margin-left: 10px;
+      }
+      .cancel:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="todo-container">
+      <h2>Edit Todo</h2>
+      <div class="todo">
+        <form action="/edit/<%= task._id %>" method="POST" class="todo-header">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value="<%= task.name %>"
+              placeholder="Enter Name"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="profimg">Profile Image URL</label>
+            <input
+              type="text"
+              id="profimg"
+              name="profimg"
+              value="<%= task.profimg %>"
+              placeholder="Enter Profile Image URL"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="mainimg">Main Image URL (500x500)</label>
+            <input
+              type="text"
+              id="mainimg"
+              name="mainimg"
+              value="<%= task.mainimg %>"
+              placeholder="Enter Main Image URL (500x500)"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="location">Location</label>
+            <input
+              type="text"
+              id="location"
+              name="location"
+              value="<%= task.location %>"
+              placeholder="Enter Location"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="caption">Caption</label>
+            <input
+              type="text"
+              id="caption"
+              name="caption"
+              value="<%= task.caption %>"
+              placeholder="Enter Caption"
+              required
+            />
+          </div>
+          <button type="submit">Confirm</button>
+          <a href="/home" class="cancel">Cancel</a>
+        </form>
+      </div>
     </div>
-  </div>
-</body>
+  </body>
+</html>
