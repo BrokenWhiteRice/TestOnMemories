@@ -7,7 +7,7 @@ const dotenv = require("dotenv");
 const csv = require("csv-parser");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
-const bcrypt = require("bcrypt"); // Import bcrypt for password hashing
+const bcrypt = require("bcrypt"); // hash
 dotenv.config();
 const multer = require("multer");
 
@@ -198,7 +198,7 @@ app
       const id = req.params.id;
       const task = await TodoTask.findById(id);
 
-      // Check if the user is authorized to edit this task
+      // Check if the user is authorized
       if (task && task.userIdentifier === req.user.id) {
         res.render("todoEdit.ejs", { task, idTask: id });
       } else {
@@ -213,9 +213,8 @@ app
       const id = req.params.id;
       const task = await TodoTask.findById(id);
 
-      // Check if the user is authorized to edit this task
+      // Check if the user is authorized
       if (task && task.userIdentifier === req.user.id) {
-        // Update task fields
         task.name = req.body.name;
         task.profimg = req.body.profimg;
         task.location = req.body.location;
@@ -243,43 +242,29 @@ app
   });
 
 app.get("/remove/:id", verifyToken, async (req, res) => {
-  const id = req.params.id;
   try {
-    // Fetch the task by ID
+    const id = req.params.id;
     const task = await TodoTask.findById(id);
 
-    // Update the task to mark it as deleted
+    if (!task) {
+      return res.status(404).send("Task not found");
+    }
+
+    if (!req.user || task.userIdentifier !== req.user.id) {
+      return res.status(403).send("Unauthorized");
+    }
+
     await TodoTask.findByIdAndUpdate(id, { deleted: true });
 
-    // Retrieve tasks after removing
-    const userId = req.user.id;
-    const tasks = await TodoTask.find({
-      userIdentifier: userId,
-      deleted: false,
-    });
-
-    // Retrieve avatarUrl from req.user
-    const avatarUrl = req.user.avatarUrl;
-    const name = req.user.name;
-
-    // Extract the filename if task exists and has mainimg property
-    const filename = task && task.mainimg ? task.mainimg.filename : "";
-
-    // Pass the required variables to the template
-    res.render("todo.ejs", {
-      filename: filename,
-      avatarUrl: avatarUrl,
-      name: name,
-      token: req.token,
-      todoTasks: tasks,
-    });
+    // Redirect the user back to the public page after removing the task
+    res.redirect("/public");
   } catch (err) {
     console.error(err);
     res.status(500).send("Error removing task");
   }
 });
 
-//VIEW DELETED POSTS
+//VIEW DELETED POSTS (not implemented yet)
 app.get("/deleted", async (req, res) => {
   try {
     const deletedTasks = await TodoTask.find({ deleted: true });
@@ -313,11 +298,9 @@ function verifyToken(req, res, next) {
   }
 }
 
-// ==== added ===
-// Profile editing route
+// ==== EDIT ===
 app.get("/profile/edit", verifyToken, async (req, res) => {
   try {
-    // Fetch the user's information from the database
     const userId = req.user.id;
     const user = await User.findById(userId);
     res.render("profileEdit.ejs", { user });
@@ -326,7 +309,7 @@ app.get("/profile/edit", verifyToken, async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
-// Profile editing POST route
+
 app.post("/profile/edit", verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -334,15 +317,58 @@ app.post("/profile/edit", verifyToken, async (req, res) => {
 
     user.name = req.body.name;
     user.avatarUrl = req.body.avatarUrl;
-    // Update other user fields as needed
 
-    // Save the updated user information to the database
+    // Save the updated user information to db
     await user.save();
 
-    // Redirect the user to the home page or profile page
-    res.redirect("/home"); // You can change this to the desired destination
+    res.redirect("/home");
   } catch (error) {
     console.error("Error updating user information:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.get("/public", async (req, res) => {
+  try {
+    const tasks = await TodoTask.find({ deleted: false }).sort({
+      createdAt: -1,
+    });
+
+    let token = null;
+    let avatarUrl = null;
+    let name = null;
+    let userId = null; // Define userId variable
+
+    // Check if user is authenticated
+    let bearerHeader = req.headers["authorization"];
+    if (!bearerHeader) {
+      bearerHeader = req.cookies.token;
+    }
+    if (typeof bearerHeader !== "undefined") {
+      const bearerToken = bearerHeader.split(" ")[1];
+      jwt.verify(bearerToken, process.env.JWT_SECRET, (err, authData) => {
+        if (err) {
+          console.error("Token verification error:", err);
+          res.status(403).send("Invalid or expired token");
+        } else {
+          console.log("Token verified successfully:", authData);
+          token = bearerToken;
+          avatarUrl = authData.avatarUrl;
+          name = authData.name;
+          userId = authData.id; // Set userId from authData
+        }
+      });
+    }
+
+    res.render("public.ejs", {
+      todoTasks: tasks,
+      token: token,
+      avatarUrl: avatarUrl,
+      name: name,
+      userId: userId, // Pass userId to the template
+    });
+  } catch (err) {
+    console.error(err);
     res.status(500).send("Internal Server Error");
   }
 });

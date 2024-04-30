@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const todoTaskSchema = new mongoose.Schema({
+  author: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   userIdentifier: {
     type: String,
   },
