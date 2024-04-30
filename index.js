@@ -21,7 +21,7 @@ main().catch((err) => console.log(err));
 async function main() {
   await mongoose.connect(process.env.URI);
   console.log("Connected to db!");
-  app.listen(3000, () => console.log("Server Up and running"));
+  app.listen(3100, () => console.log("Server Up and running"));
 }
 
 app.set("view engine", "ejs");
@@ -31,28 +31,16 @@ app.use("/uploads", express.static("uploads"));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Error handling middleware for Multer
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
-    // A Multer error occurred when uploading
     console.error("Multer error:", err);
     res.status(400).send("Error uploading file");
   } else {
-    // An unknown error occurred
     console.error("Unknown error:", err);
     res.status(500).send("Internal Server Error");
   }
 });
 
-app.get("/api/posts", async (req, res) => {
-  try {
-    const posts = await util.read(URI, DATABASE, POSTS, {});
-    res.json(posts); //  JSON response
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ error: "Failed to retrieve posts" });
-  }
-});
 app.route("/").get(async (req, res) => {
   try {
     res.render("login.ejs");
@@ -64,17 +52,18 @@ app.route("/").get(async (req, res) => {
 app.get("/home", verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
+    const user = await User.findById(userId); // Fetch the user information from the database
+
     const tasks = await TodoTask.find({
       userIdentifier: userId,
       deleted: false,
     });
-    const avatarUrl = req.avatarUrl;
-    const name = req.name;
+
     res.render("todo.ejs", {
       todoTasks: tasks,
       token: req.token,
-      avatarUrl: avatarUrl,
-      name: name,
+      avatarUrl: user.avatarUrl, // Use the avatarUrl from the user object
+      name: user.name, // Use the name from the user object
     });
   } catch (err) {
     console.error(err);
@@ -91,30 +80,25 @@ app.post("/home", verifyToken, upload.single("file"), async (req, res) => {
       return res.status(400).send("No file uploaded");
     }
 
-    // Access the filename and other image properties
     const { filename, buffer, mimetype } = req.file;
 
-    // Create a new TodoTask object with image data
     const todoTask = new TodoTask({
       name: req.body.name,
       mainimg: {
-        data: buffer, // Save image data
-        contentType: mimetype, // Save content type
-        filename: filename, // Save filename
+        data: buffer,
+        contentType: mimetype,
+        filename: filename,
       },
       location: req.body.location,
       caption: req.body.caption,
       userIdentifier: userId,
     });
 
-    // Save the TodoTask object to the database
     await todoTask.save();
 
-    // Retrieve avatarUrl from req.user
     const avatarUrl = req.user.avatarUrl;
     const name = req.user.name;
 
-    // Retrieve todoTasks for the user
     const tasks = await TodoTask.find({
       userIdentifier: userId,
       deleted: false,
@@ -322,3 +306,35 @@ function verifyToken(req, res, next) {
 }
 
 // ==== added ===
+// Profile editing route
+app.get("/profile/edit", verifyToken, async (req, res) => {
+  try {
+    // Fetch the user's information from the database
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+    res.render("profileEdit.ejs", { user });
+  } catch (error) {
+    console.error("Error fetching user information:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+// Profile editing POST route
+app.post("/profile/edit", verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+
+    user.name = req.body.name;
+    user.avatarUrl = req.body.avatarUrl;
+    // Update other user fields as needed
+
+    // Save the updated user information to the database
+    await user.save();
+
+    // Redirect the user to the home page or profile page
+    res.redirect("/home"); // You can change this to the desired destination
+  } catch (error) {
+    console.error("Error updating user information:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
