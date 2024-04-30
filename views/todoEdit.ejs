@@ -58,39 +58,14 @@
     <div class="todo-container">
       <h2>Edit Todo</h2>
       <div class="todo">
-        <form action="/edit/<%= task._id %>" method="POST" class="todo-header">
+        <form
+          action="/edit/<%= task._id %>"
+          method="POST"
+          enctype="multipart/form-data"
+        >
           <div class="form-group">
-            <label for="name">Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value="<%= task.name %>"
-              placeholder="Enter Name"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="profimg">Profile Image URL</label>
-            <input
-              type="text"
-              id="profimg"
-              name="profimg"
-              value="<%= task.profimg %>"
-              placeholder="Enter Profile Image URL"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="mainimg">Main Image URL (500x500)</label>
-            <input
-              type="text"
-              id="mainimg"
-              name="mainimg"
-              value="<%= task.mainimg %>"
-              placeholder="Enter Main Image URL (500x500)"
-              required
-            />
+            <label for="mainimg">Main Image (Upload Test)</label>
+            <input type="file" id="mainimg" name="mainimg" accept="image/*" />
           </div>
           <div class="form-group">
             <label for="location">Location</label>
@@ -100,7 +75,6 @@
               name="location"
               value="<%= task.location %>"
               placeholder="Enter Location"
-              required
             />
           </div>
           <div class="form-group">
@@ -111,11 +85,9 @@
               name="caption"
               value="<%= task.caption %>"
               placeholder="Enter Caption"
-              required
             />
           </div>
-          <button type="submit">Confirm</button>
-          <a href="/home" class="cancel">Cancel</a>
+          <button type="submit">Update</button>
         </form>
       </div>
     </div>

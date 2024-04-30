@@ -33,6 +33,7 @@ const todoTaskSchema = new mongoose.Schema({
     data: Buffer,
     contentType: String,
   },
+  createdAt: { type: Date, default: Date.now },
 });
 
 module.exports = mongoose.model("TodoTask", todoTaskSchema);

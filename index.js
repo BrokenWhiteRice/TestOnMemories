@@ -52,18 +52,18 @@ app.route("/").get(async (req, res) => {
 app.get("/home", verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    const user = await User.findById(userId); // Fetch the user information from the database
+    const user = await User.findById(userId);
 
     const tasks = await TodoTask.find({
       userIdentifier: userId,
       deleted: false,
-    });
+    }).sort({ createdAt: -1 });
 
     res.render("todo.ejs", {
       todoTasks: tasks,
       token: req.token,
-      avatarUrl: user.avatarUrl, // Use the avatarUrl from the user object
-      name: user.name, // Use the name from the user object
+      avatarUrl: user.avatarUrl,
+      name: user.name,
     });
   } catch (err) {
     console.error(err);
@@ -96,8 +96,9 @@ app.post("/home", verifyToken, upload.single("file"), async (req, res) => {
 
     await todoTask.save();
 
-    const avatarUrl = req.user.avatarUrl;
-    const name = req.user.name;
+    const user = await User.findById(userId);
+    const avatarUrl = user.avatarUrl;
+    const name = user.name;
 
     const tasks = await TodoTask.find({
       userIdentifier: userId,
@@ -109,7 +110,7 @@ app.post("/home", verifyToken, upload.single("file"), async (req, res) => {
       token: req.token,
       avatarUrl: avatarUrl,
       name: name,
-      filename: filename, // Pass the filename to the view
+      filename: filename,
     });
   } catch (error) {
     console.error("Error creating task:", error);
@@ -122,35 +123,29 @@ app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Find the user by email
     const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(401).send("Invalid credentials");
     }
 
-    // Compare the password with the hashed password stored in the database
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).send("Invalid credentials");
     }
 
-    // Generate JWT token for authentication
     const token = jwt.sign(
       {
         id: user._id,
         email: user.email,
-        avatarUrl: user.avatar,
+        avatarUrl: user.avatarUrl,
         name: user.name,
       },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    // Set JWT token as cookie
     res.cookie("token", "Bearer " + token, { httpOnly: true, secure: true });
-
-    // Redirect the user to the home page
     res.redirect("/home");
   } catch (error) {
     console.error(error);
@@ -161,42 +156,33 @@ app.post("/login", async (req, res) => {
 // === LOG OUT ====
 app.get("/logout", (req, res) => {
   res.clearCookie("token", { httpOnly: true, secure: true });
-  // Redirect the user to the login page after logout
   res.redirect("/");
 });
 
 // === SIGNUP ====
 app.post("/signup", async (req, res) => {
   try {
-    // Extract email and password from request body
     const { email, password } = req.body;
 
-    // Validate input data (you can add more validation as needed)
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    // Check if user with the same email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: "Email already exists" });
     }
 
-    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create a new user object
     const newUser = new User({ email, password: hashedPassword });
 
-    // Save the new user to the database
     await newUser.save();
 
-    // Generate JWT token for authentication
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
-    // Send the JWT token back to the client
     res.status(201).json({ token });
   } catch (error) {
     console.error("Error signing up user:", error);
@@ -204,31 +190,53 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// === HOME PAGE ===
-
-//UPDATE
+/// UPDATE
 app
   .route("/edit/:id")
-  .get(async (req, res) => {
-    const id = req.params.id;
+  .get(verifyToken, async (req, res) => {
     try {
+      const id = req.params.id;
       const task = await TodoTask.findById(id);
-      res.render("todoEdit.ejs", { task, idTask: id });
+
+      // Check if the user is authorized to edit this task
+      if (task && task.userIdentifier === req.user.id) {
+        res.render("todoEdit.ejs", { task, idTask: id });
+      } else {
+        res.status(403).send("Unauthorized");
+      }
     } catch (err) {
       res.status(500).send(err);
     }
   })
-  .post(async (req, res) => {
-    const id = req.params.id;
+  .post(verifyToken, upload.single("mainimg"), async (req, res) => {
     try {
-      await TodoTask.findByIdAndUpdate(id, {
-        name: req.body.name,
-        profimg: req.body.profimg,
-        mainimg: req.body.mainimg,
-        location: req.body.location,
-        caption: req.body.caption,
-      });
-      res.redirect("/home");
+      const id = req.params.id;
+      const task = await TodoTask.findById(id);
+
+      // Check if the user is authorized to edit this task
+      if (task && task.userIdentifier === req.user.id) {
+        // Update task fields
+        task.name = req.body.name;
+        task.profimg = req.body.profimg;
+        task.location = req.body.location;
+        task.caption = req.body.caption;
+
+        // Handle file upload if a file is provided
+        if (req.file) {
+          task.mainimg = {
+            data: req.file.buffer,
+            contentType: req.file.mimetype,
+            filename: req.file.originalname,
+          };
+        }
+
+        // Save the updated task
+        await task.save();
+
+        res.redirect("/home");
+      } else {
+        res.status(403).send("Unauthorized");
+      }
     } catch (err) {
       res.status(500).send(err);
     }

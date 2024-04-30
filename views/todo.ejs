@@ -263,9 +263,6 @@
               accept="image/*"
             />
           </div>
-          
-          
-
           <div class="form-group">
             <input
               type="text"
@@ -288,9 +285,6 @@
         </form>
       </div>
 </div>
-      <!-- Pagination -->
-
-      <!-- List of existing posts -->
       <!-- List of existing posts -->
 <div class="posts-list">
   <% todoTasks.forEach(details => { %>
@@ -305,6 +299,9 @@
           <strong><%= name %></strong>
           <p><%= details.location %></p>
         </div>
+        <p><%= new Date(details.createdAt).toLocaleString() %></p> <!-- Display creation date and time -->
+
+
       </div>
       <div class="item-card-body">
         <img src="/uploads/<%= details.mainimg.filename %>" alt="Task Image">
@@ -339,22 +336,20 @@
     <script>
       $(document).on("click", ".heart-icon", function () {
         $(this).toggleClass("clicked");
-        var postId = $(this).data("post-id"); /
+        var postId = $(this).data("post-id"); // Remove the extra forward slash (/) here
         localStorage.setItem("heartClicked_" + postId, $(this).hasClass("clicked")); 
       });
-
+    
       $(document).ready(function () {
         var heartClicked;
         <% todoTasks.forEach(details => { %>
           heartClicked = localStorage.getItem("heartClicked_<%= details._id %>");
           if (heartClicked === "true") {
-            $("#<%= details._id %> .heart-icon").addClass("clicked"); 
+            $("#" + "<%= details._id %>" + " .heart-icon").addClass("clicked"); // Concatenate the ID correctly
           }
         <% }) %>
-      });
-
-      
-      
+      });  
     </script>
+    
   </body>
 </html>
