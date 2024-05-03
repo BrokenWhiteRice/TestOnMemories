@@ -20,7 +20,7 @@ main().catch((err) => console.log(err));
 
 async function main() {
   await mongoose.connect(process.env.URI);
-  console.log("Connected to db!");
+  console.log("Connected to db!", process.env.URI);
   app.listen(3100, () => console.log("Server Up and running"));
 }
 
@@ -145,7 +145,7 @@ app.post("/home", verifyToken, upload.single("file"), async (req, res) => {
       userIdentifier: userId,
       deleted: false,
     });
-
+    console.log("New post added to MongoDB:", todoTask);
     res.render("todo.ejs", {
       todoTasks: tasks,
       token: req.token,
@@ -377,7 +377,7 @@ app.get("/public", async (req, res) => {
 
     let token = null;
     let avatarUrl = null;
-    let name = "anonymous"; // Set default name to "anonymous"
+    let name = "anonymous";
     let userId = null; // Define userId variable
 
     // Check if user is authenticated

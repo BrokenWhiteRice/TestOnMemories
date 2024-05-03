@@ -15,9 +15,8 @@ const todoTaskSchema = new mongoose.Schema({
     type: String,
   },
   mainimg: {
-    data: Buffer, // Store image data
-    contentType: String, // Store image content type
-    filename: String, // Store filename
+    contentType: String,
+    filename: String,
   },
   location: {
     type: String,

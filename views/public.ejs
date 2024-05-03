@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Todo App</title>
+    <title>Bami</title>
     <!-- Bootstrap CSS link -->
     <link
       rel="stylesheet"
@@ -130,9 +130,22 @@
         color: #4267b2;
       }
 
-      /* Hide create form when not signed in */
       .create-form {
         display: none;
+      }
+
+      button[type="submit"] {
+        background-color: #3b5998;
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+      }
+      button[type="submit"]:hover {
+        background-color: #4267b2;
       }
     </style>
   </head>
@@ -308,18 +321,14 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
       $(document).ready(function () {
-        // Check if token exists (user is logged in)
+        // Check if token exists
         var token = "<%= token %>";
         if (token) {
-          $(".create-form").show(); // Show create form
+          $(".create-form").show();
         }
 
-        // Like button click event
         $(".btn-like").on("click", function () {
-          // Toggle the "active" class on the like button
           $(this).toggleClass("active");
-
-          // Toggle the heart icon class
           $(this).find("i").toggleClass("fas far");
         });
       });
