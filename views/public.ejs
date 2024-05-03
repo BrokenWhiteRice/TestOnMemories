@@ -129,13 +129,20 @@
       .post-actions button.active {
         color: #4267b2;
       }
+
+      /* Hide create form when not signed in */
+      .create-form {
+        display: none;
+      }
     </style>
   </head>
   <body>
     <header class="header" data-header>
       <nav class="navbar navbar-expand-lg navbar-light mb-5">
         <div class="container">
-          <a class="navbar-brand" style="color: whitesmoke" href="#">Bami</a>
+          <a class="navbar-brand" style="color: whitesmoke" href="/public"
+            >Bami</a
+          >
           <button
             class="navbar-toggler"
             type="button"
@@ -147,9 +154,9 @@
           >
             <span class="navbar-toggler-icon"></span>
           </button>
-
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav ml-auto">
+              <% if (token) { %>
               <li class="nav-item dropdown">
                 <a
                   class="nav-link dropdown-toggle"
@@ -160,13 +167,11 @@
                   aria-haspopup="true"
                   aria-expanded="false"
                 >
-                  <% if (avatarUrl) { %>
                   <img
                     src="<%= avatarUrl %>"
                     alt="User Avatar"
                     class="profile-picture"
                   />
-                  <% } %>
                 </a>
                 <div
                   class="dropdown-menu dropdown-menu-right"
@@ -178,6 +183,12 @@
                   <a class="dropdown-item" href="/logout">Logout</a>
                 </div>
               </li>
+              <% } else { %>
+              <!-- Display Sign In button -->
+              <li class="nav-item">
+                <a class="nav-link" href="/">Sign In</a>
+              </li>
+              <% } %>
             </ul>
           </div>
         </div>
@@ -185,7 +196,7 @@
     </header>
 
     <div class="container">
-      <h1 class="text-center mb-4">Welcome</h1>
+      <h1 class="text-center mb-4">This is public page</h1>
 
       <!-- Form for creating new posts -->
       <div class="create-form mb-4">
@@ -228,10 +239,10 @@
       </div>
 
       <!-- List of existing posts -->
-      <!-- List of existing posts -->
       <div class="posts-list">
         <% todoTasks.forEach(details => { %>
         <div class="post-container">
+          <% if (details.userIdentifier === userId) { %>
           <div class="post-header">
             <img
               class="profile-picture"
@@ -246,6 +257,22 @@
               <p><%= new Date(details.createdAt).toLocaleString() %></p>
             </div>
           </div>
+          <% } else { %>
+          <div class="post-header">
+            <img
+              class="profile-picture"
+              src="https://villagesonmacarthur.com/wp-content/uploads/2020/12/Blank-Avatar.png"
+              alt="Anonymous"
+            />
+            <div class="user-info">
+              <strong>Anonymous</strong>
+              <p><%= details.location %></p>
+            </div>
+            <div class="post-date">
+              <p><%= new Date(details.createdAt).toLocaleString() %></p>
+            </div>
+          </div>
+          <% } %>
           <div class="post-body">
             <img
               src="/uploads/<%= details.mainimg.filename %>"
@@ -262,7 +289,6 @@
               <i class="far fa-comment"></i> Comment
             </button>
             <% if (details.userIdentifier === userId) { %>
-            <!-- Only show edit and delete buttons if the logged-in user is the author -->
             <button class="btn-edit" data-post-id="<%= details._id %>">
               <i class="fas fa-edit"></i> Edit
             </button>
@@ -271,7 +297,6 @@
             </button>
             <% } %>
           </div>
-          <!-- Comments -->
           <div class="comments"></div>
         </div>
         <% }) %>
@@ -283,43 +308,19 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
       $(document).ready(function () {
+        // Check if token exists (user is logged in)
+        var token = "<%= token %>";
+        if (token) {
+          $(".create-form").show(); // Show create form
+        }
+
+        // Like button click event
         $(".btn-like").on("click", function () {
+          // Toggle the "active" class on the like button
           $(this).toggleClass("active");
-          if ($(this).hasClass("active")) {
-            $(this)
-              .find("i")
-              .removeClass("far")
-              .addClass("fas")
-              .addClass("liked");
-          } else {
-            $(this)
-              .find("i")
-              .removeClass("fas")
-              .removeClass("liked")
-              .addClass("far");
-          }
-        });
 
-        // Display comments
-        $(".btn-comment").on("click", function () {
-          var postId = $(this).data("post-id");
-          var commentContainer = $(this)
-            .closest(".post-container")
-            .find(".comments");
-          // Fetch comments for postId and append to commentContainer
-        });
-
-        // Edit post
-        $(".btn-edit").on("click", function () {
-          var postId = $(this).data("post-id");
-          window.location.href = "/edit/" + postId;
-        });
-
-        // Delete post
-        $(".btn-delete").on("click", function (event) {
-          event.preventDefault();
-          var postId = $(this).data("post-id");
-          window.location.href = "/remove/" + postId;
+          // Toggle the heart icon class
+          $(this).find("i").toggleClass("fas far");
         });
       });
     </script>

@@ -43,9 +43,50 @@ app.use((err, req, res, next) => {
 
 app.route("/").get(async (req, res) => {
   try {
-    res.render("login.ejs");
+    const tasks = await TodoTask.find({ deleted: false }).sort({
+      createdAt: -1,
+    });
+
+    let token = null;
+    let avatarUrl = null;
+    let name = "anonymous"; // Set default name to "anonymous"
+    let userId = null; // Define userId variable
+
+    // Check if user is authenticated
+    let bearerHeader = req.headers["authorization"];
+    if (!bearerHeader) {
+      bearerHeader = req.cookies.token;
+    }
+    if (typeof bearerHeader !== "undefined") {
+      const bearerToken = bearerHeader.split(" ")[1];
+      jwt.verify(bearerToken, process.env.JWT_SECRET, (err, authData) => {
+        if (err) {
+          console.error("Token verification error:", err);
+          res.status(403).send("Invalid or expired token");
+        } else {
+          console.log("Token verified successfully:", authData);
+          token = bearerToken;
+          avatarUrl = authData.avatarUrl;
+          name = authData.name;
+          userId = authData.id; // Set userId from authData
+        }
+      });
+    } else {
+      // Set default avatar URL if user is not signed in
+      avatarUrl =
+        "https://villagesonmacarthur.com/wp-content/uploads/2020/12/Blank-Avatar.png";
+    }
+
+    res.render("login.ejs", {
+      todoTasks: tasks,
+      token: token,
+      avatarUrl: avatarUrl,
+      name: name,
+      userId: userId, // Pass userId to the template
+    });
   } catch (err) {
     console.error(err);
+    res.status(500).send("Internal Server Error");
   }
 });
 
@@ -156,7 +197,7 @@ app.post("/login", async (req, res) => {
 // === LOG OUT ====
 app.get("/logout", (req, res) => {
   res.clearCookie("token", { httpOnly: true, secure: true });
-  res.redirect("/");
+  res.redirect("/public");
 });
 
 // === SIGNUP ====
@@ -336,7 +377,7 @@ app.get("/public", async (req, res) => {
 
     let token = null;
     let avatarUrl = null;
-    let name = null;
+    let name = "anonymous"; // Set default name to "anonymous"
     let userId = null; // Define userId variable
 
     // Check if user is authenticated
@@ -358,6 +399,10 @@ app.get("/public", async (req, res) => {
           userId = authData.id; // Set userId from authData
         }
       });
+    } else {
+      // Set default avatar URL if user is not signed in
+      avatarUrl =
+        "https://villagesonmacarthur.com/wp-content/uploads/2020/12/Blank-Avatar.png";
     }
 
     res.render("public.ejs", {
