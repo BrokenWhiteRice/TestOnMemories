@@ -332,6 +332,18 @@
           $(this).find("i").toggleClass("fas far");
         });
       });
+
+      // Edit post
+      $(".btn-edit").on("click", function () {
+        var postId = $(this).data("post-id");
+        window.location.href = "/edit/" + postId;
+      });
+      // Delete post
+      $(".btn-delete").on("click", function (event) {
+        event.preventDefault();
+        var postId = $(this).data("post-id");
+        window.location.href = "/remove/" + postId;
+      });
     </script>
   </body>
 </html>
